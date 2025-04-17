@@ -1,65 +1,72 @@
-# CodeACT: Code Adaptive Compute-efficient Tuning Framework for Code LLMs
+# Data-efficient LLM Fine-tuning for Code Generation
 
-[![Paper](https://img.shields.io/badge/Paper-arXiv?logo=arxiv&logoColor=%23B31B1B&label=arXiv&labelColor=%23f5f5dc&color=%23B31B1B)](https://arxiv.org/abs/2408.02193)
+[![Paper](https://img.shields.io/badge/Paper-arXiv?logo=arxiv&logoColor=%23B31B1B&label=arXiv&labelColor=%23f5f5dc&color=%23B31B1B)]()
 
 ## Contents
 
 - [Overview](#overview)
-- [Components](#components)
+- [Method](#Method)
 - [Results](#results)
 - [Usage](#usage)
 - [Citation](#citation)
 
 ## Overview
 
-Motivated by the need for more effective and efficient training, we propose the **Code** **A**daptive **C**ompute-efficient **T**uning (**CodeACT**) framework. CodeACT introduces the **C**omplexity and **D**iversity **A**ware **S**ampling (**CDAS**) method to select high-quality training data based on complexity and diversity, and the **Dynamic Pack** padding strategy to reduce computational resource usage by minimizing padding tokens during training. 
+In this work, we propose a data selection strategy in order to improve the effectiveness and efficiency of training for code-based LLMs. By prioritizing data complexity and ensuring that the sampled subset aligns with the distribution of the original dataset, our sampling strategy effectively selects high-quality data. Additionally, we optimize the tokenization process through a "dynamic pack" technique, which minimizes padding tokens and reduces computational resource consumption.
 
-Experimental results demonstrate that ***CodeACT-DeepSeek-Coder-6.7B***, fine-tuned on only 40% of the EVOL-Instruct data, achieves an 8.6\% performance increase on HumanEval, reduces training time by 78%, and decreases peak GPU memory usage by 27%. 
+Experimental results show that when training on 40\% of the OSS-Instruct dataset, the DeepSeek-Coder-Base-6.7B model achieves an average performance of 66.9\%, surpassing the 66.1\% performance with the full dataset. Moreover, training time is reduced from 47 minutes to 34 minutes, and the peak GPU memory usage decreases from 61.47 GB to 42.72 GB during a single epoch. Similar improvements are observed with the CodeLlama-Python-7B model on the Evol-Instruct dataset.
 
-## Components
+## Method
 
-### Complexity and Diversity Aware Sampling
+### Data Selection Strategy
 
 <div style="text-align: center;">
-<img alt="Overview of CDAS method" src="assets/CDAS.png">
+<img alt="Overview of our data selection strategy" src="assets/data_selection.png">
 </div>
 
-An overview of our proposed CDAS method, including three steps from top to bottom. 
+The overview of our proposed data selection strategy, including three steps.
 
-* Step 1: Clustering the EVOL-Instruct dataset to form multiple clusters. 
-* Step 2: Computing the Instruction-Following Difficulty score by comparing the model's perplexity with and without instructions. 
-* Step 3: Sampling the top m\% instances from each re-ranked cluster to form a high-complexity sub-dataset that preserves data diversity. 
+* Step 1: Partitioning the synthetic dataset into multiple clusters.
+* Step 2: Computing the Instruction Following Difficulty score by comparing the model's perplexity with and without instructions. 
+* Step 3: Sampling the top m\% instances from each re-ranked cluster to form a high-complexity sub-dataset that preserves data consistency.
 
-Finally, we use the selected data for fine-tuning to obtain CodeACT-Coder.
+Finally, the selected data is used for fine-tuning open-source code LLMs.
 
-### Dynamic Pack
+### Data Tokenization Strategy
 
 <div style="text-align: center;">
-<img alt="Illustration of different padding strategies" src="assets/DynamicPack.png">
+<img alt="Illustration of different padding strategies" src="assets/dynamic_pack.png">
 </div>
 
 Illustration of different padding strategies, where the blank squares represent padding tokens. 
 * Top: Traditional padding strategy aligns samples to the model's maximum input length, resulting in high computational resource consumption. 
 * Middle: Dynamic padding strategy reduces the number of padding tokens by aligning samples to the length of the longest sample in each batch. 
-* Bottom: Our proposed Dynamic Pack strategy sorts samples by length and concatenates multiple samples within a batch, further optimizing the utilization of the model's maximum input length and reducing padding tokens.
+* Bottom: Our proposed "dynamic pack" strategy sorts samples by length and concatenates multiple samples within a batch, further optimizing the utilization of the model's maximum input length and reducing padding tokens.
 
 ## Results
 
-### RQ1: How does the CodeACT framework perform across different datasets and models?
+### Main Results
 
-
-The CodeACT framework has been tested for its performance and efficiency on the OSS-Instruct and EVOL-Instruct datasets using the CodeLlama and DeepSeek-Coder models. The results show that CodeACT effectively optimizes computational resources while maintaining or improving model performance, highlighting its potential for efficient and effective model training.
+By prioritizing high-complexity subsets while ensuring that the distribution aligns with the original dataset, our data selection strategy demonstrates its effectiveness across different models and datasets. Selecting high-quality data not only improves performance but also significantly improves training efficiency.
 
 <div style="text-align: center;">
-<img alt="Experiment 1" src="assets/Table1.png">
+<img alt="Perfomance Comparison" src="assets/comparison_perf.png">
 </div>
 
-### RQ2: How does the performance of models trained with CodeACT compare to other models?
+### Sampling Rates
 
-The open-source models trained with CodeACT show significant performance improvements. Notably, CodeACT-DS-6.7B, trained on fewer data samples, surpasses models trained on larger datasets, showcasing the effectiveness of the CDAS method for data selection. These results indicate that CodeACT not only enhances model performance but also bridges the gap between open-source and closed-source models, positioning it as a valuable tool for advancing the capabilities of Code LLMs with optimized data selection and training processes.
+Impact of sampling rates (ranging from 10\% to 60\%) on model performance. The results demonstrate that model performance peaks at sampling rates between 30\% and 40\%, after which it begins to decline. "Average Full Data" denotes the model's average performance on the HumanEval and MBPP benchmarks when trained on the full data. "Average" reflects the model's average performance on these two benchmarks at different sampling rates.
 
 <div style="text-align: center;">
-<img alt="Experiment 2" src="assets/Table2.png">
+<img alt="Sampling Rate Comparison" src="assets/comparison_sr.png">
+</div>
+
+### Training Efficiency
+
+We evaluate the effectiveness of our "dynamic pack" technique in optimizing training efficiency across different models and datasets. The results include the training time and the peak GPU memory usage during one training epoch. To monitor the GPU memory consumption, we utilize the `torch.cuda.max_memory_allocated` function. DS denotes DeepSeek-Coder, and CL denotes CodeLlama.
+
+<div style="text-align: center;">
+<img alt="Efficiency Comparison" src="assets/comparison_eff.png"> 
 </div>
 
 ## Usage
@@ -73,8 +80,8 @@ The open-source models trained with CodeACT show significant performance improve
 - CUDA 12.1
 
 ```bash
-conda create -n codeact python=3.11
-conda activate codeact
+conda create -n finetune python=3.11 -y
+conda activate finetune
 pip install -r requirements.txt
 ```
 
@@ -93,11 +100,11 @@ pip install flash-attn==2.5.9.post1 --no-build-isolation
 ### Datasets
 
 - [EVOL-Instruct](https://huggingface.co/datasets/nickrosh/Evol-Instruct-Code-80k-v1): An open-source implementation of Evol-Instruct as described in the [WizardCoder Paper](https://arxiv.org/abs/2306.08568).
-- [OSS-Instruct](https://huggingface.co/datasets/ise-uiuc/Magicoder-OSS-Instruct-75K): This dataset is generated by gpt-3.5-turbo-1106. More details can be found in [Magicoder Paper](https://arxiv.org/abs/2312.02120).
+- [OSS-Instruct](https://huggingface.co/datasets/ise-uiuc/Magicoder-OSS-Instruct-75K): This dataset is generated by gpt-3.5-turbo-1106. More details can be found in the [Magicoder Paper](https://arxiv.org/abs/2312.02120).
 
 ### Data Selection
 
-Our proposed CDAS is rooted in the necessity of considering both the complexity and diversity of data to enhance model training efficiency and effectiveness.
+Our data selection strategy is rooted in the necessity of considering both the complexity and consistency of data to enhance model training efficiency and effectiveness.
 
 #### 1. Calculate IFD scores
 
@@ -109,7 +116,7 @@ To efficiently handle large datasets, we support processing data in chunks. Each
 
 ```bash
 # Calculate IFD scores for a single chunk with indices from 0 to 10,000
-python CDAS/calculate_ifd.py \
+python data_selection/calculate_ifd.py \
 --data_path ${data_path} \
 --question_column ${question_column_name} \
 --answer_column ${answer_column_name} \
@@ -124,7 +131,7 @@ After processing all chunks, merge the results using the following command:
 
 ```bash
 # Merge all processed chunks
-python CDAS/calculate_ifd.py \
+python data_selection/calculate_ifd.py \
 --save_dir ${save_dir} \
 --num_split ${num} \
 --merge
@@ -133,7 +140,7 @@ python CDAS/calculate_ifd.py \
 #### 2. Get embedding using [all-mpnet-base-v2](https://huggingface.co/sentence-transformers/all-mpnet-base-v2) model
 
 ```bash
-python CDAS/get_embedding.py \
+python data_selection/get_embedding.py \
 --data_path ${data_path} \
 --save_dir ${save_dir} \
 --batch_size 512 \
@@ -144,7 +151,7 @@ python CDAS/get_embedding.py \
 #### 3. Sample data
 
 ```bash
-python CDAS/select_data.py \
+python data_selection/select_data.py \
 --data_path ${data_path} \
 --npy_path ${npy_path} \
 --save_path ${save_path} \
@@ -293,16 +300,8 @@ This command will compute the metrics and provide a detailed report on the model
 
 ## Citation
 
-If you find CodeACT helpful, please cite it as follows:
+If you find this work helpful, please cite our paper as follows:
 
 ```bibtex
-@misc{lv2024codeactcodeadaptivecomputeefficient,
-      title={CodeACT: Code Adaptive Compute-efficient Tuning Framework for Code LLMs}, 
-      author={Weijie Lv and Xuan Xia and Sheng-Jun Huang},
-      year={2024},
-      eprint={2408.02193},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2408.02193}, 
-}
+
 ```
