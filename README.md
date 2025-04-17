@@ -298,6 +298,25 @@ python benchmark/evaluate.py --dataset [humaneval|mbpp] --samples ${sample_file}
 
 This command will compute the metrics and provide a detailed report on the model's performance.
 
+### Web Demo
+
+**Parameters:**
+- ***chat_base_model_path***: Path to the instruction model.
+- ***infill_base_model_path***: Path to the base model.
+- ***conv_name***: The conversation model name to use. Supported values are `cat-deepseek` and `cat-codellama`.
+- ***gpu***: The GPU id.
+
+```bash
+cd serve
+pip install -r requirements.txt
+
+python web_demo.py \
+--chat_base_model_path ${instruct_model_path} \
+--infill_base_model_path ${base_model_path} \
+--conv_name [cat-deepseek|cat-codellama]
+--gpu ${gpi_id}
+```
+
 ## Citation
 
 If you find this work helpful, please cite our paper as follows:
