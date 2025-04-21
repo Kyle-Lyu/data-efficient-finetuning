@@ -1,6 +1,6 @@
 # Data-efficient LLM Fine-tuning for Code Generation
 
-[![Paper](https://img.shields.io/badge/Paper-arXiv?logo=arxiv&logoColor=%23B31B1B&label=arXiv&labelColor=%23f5f5dc&color=%23B31B1B)]()
+[![Paper](https://img.shields.io/badge/Paper-arXiv?logo=arxiv&logoColor=%23B31B1B&label=arXiv&labelColor=%23f5f5dc&color=%23B31B1B)](https://arxiv.org/abs/2504.12687)
 
 ## Contents
 
@@ -322,5 +322,10 @@ python web_demo.py \
 If you find this work helpful, please cite our paper as follows:
 
 ```bibtex
-
+@article{lv2025data,
+  title={Data-efficient LLM Fine-tuning for Code Generation},
+  author={Lv, Weijie and Xia, Xuan and Huang, Sheng-Jun},
+  journal={arXiv preprint arXiv:2504.12687},
+  year={2025}
+}
 ```
